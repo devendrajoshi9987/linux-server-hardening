@@ -1,0 +1,135 @@
+----------------------------------------------------------------------------------------------
+Securing Linux Server
+----------------------------------------------------------------------------------------------
+
+1: Create sudo user
+2: Disable root login
+3: if possible use passwordless login
+4: Change Default port of ssh (i.e 22)
+5: Limit User Logins /etc/ssh/sshd_config For example:  AllowUsers deva devendra
+6: Disable Protocol 1 in /etc/ssh/sshd_config file, uncomment it and apend as shown:
+	# Protocol 2,1
+	Protocol 2  
+	The older protocol 1 is less secure and should be disabled 
+
+7: Filter SSH at the Firewall
+If you are unable to limit source IP addresses, and must open the ssh port globally, then iptables can still help prevent brute-force attacks by logging and blocking repeated attempts to login from the same IP address. For example,
+
+iptables -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --set --name ssh --rsource
+iptables -A INPUT -p tcp --dport 22 -m state --state NEW -m recent ! --rcheck --seconds 60 --hitcount 4 --name ssh --rsource -j ACCEPT
+
+8: For More security U can Use Fail2Bann Security
+
+
+----------------------------------------------------------------------------------------------
+Securing Web Server
+----------------------------------------------------------------------------------------------
+
+------------------------------
+1: Limit Request Size
+------------------------------
+ You can set the value in bytes from 0 (unlimited) to 2147483647 (2GB) that are allowed in a request body
+
+ <Directory "/var/www/myweb1/user_uploads">
+   LimitRequestBody 512000
+</Directory>
+
+
+------------------------------
+2: Enable Apache Logging
+------------------------------
+ErrorLog 
+CustomLog 
+
+
+------------------------------
+3: Protect DDOS attacks and Hardening
+------------------------------
+    TimeOut : This directive allows you to set the amount of time the server will wait for certain events to complete before it fails. 
+	      Its default value is 300 secs. It’s good to keep this value low on those sites which are subject to DDOS attacks. 
+	      This value totally depends on kind of request you are getting on your website. 
+	      Note: It could pose problems with come CGI scripts.
+    MaxClients : This directive allows you to set the limit on connections that will be served simultaneously. 
+                 Every new connection will be queued up after this limit. 
+		 It is available with Prefork and Worker both MPM. 
+		 The default value of it is 256.
+    KeepAliveTimeout : Its the amount of time the server will wait for a subsequent request before closing the connection. 
+                       Default value is 5 secs.
+    LimitRequestFields : It helps us to set a limit on the number of HTTP request’s header fields that will be accepted from the clients. 
+                         Its default value is 100. 
+			 It is recommended to lower this value if DDos attacks are occurring as a result of so many http request headers.
+    LimitRequestFieldSize : It helps us to set a size limit on the HTTP Request header.
+
+
+------------------------------
+4: Use mod_security to Secure Apache
+------------------------------
+Where mod_security works as a firewall for our web applications and allows us to monitor traffic on a real time basis. 
+It also helps us to protect our websites or web server from brute force attacks. 
+You can simply install mod_security on your server with the help of your default package installers.
+
+
+------------------------------
+5: Restrict access to Root Directories
+------------------------------
+<Directory />
+   Options None
+   Order deny,allow
+   Deny from all
+</Directory>
+
+    Options “None” – This option will not allow users to enable any optional features.
+    Order deny, allow – This is the order in which the “Deny” and “Allow” directives will be processed. 
+                        Here it will “deny” first and “allow” next.
+    Deny from all – This will deny request from everybody to the root directory, nobody will be able to access root directory.
+
+------------------------------
+6: Run Apache as separate User and Group (Req non-privileged account)
+------------------------------
+# groupadd apache
+# useradd -d /var/www/ -g apache -s /bin/nologin apache
+
+
+------------------------------
+7: Disable Unnecessary Modules
+------------------------------
+grep LoadModule /etc/httpd/conf/httpd.conf
+
+# have to place corresponding `LoadModule' lines at this location so the
+# LoadModule foo_module modules/mod_foo.so
+LoadModule auth_basic_module modules/mod_auth_basic.so
+LoadModule auth_digest_module modules/mod_auth_digest.so
+LoadModule authn_file_module modules/mod_authn_file.so
+LoadModule authn_alias_module modules/mod_authn_alias.so
+
+
+Above is the list of modules that are enabled by default but often not needed: mod_imap, mod_include, mod_info, mod_userdir, mod_autoindex. 
+To disable the particular module, you can insert a “#” at the beginning of that line and restart the service.
+
+------------------------------
+8: Disable Directory Listing
+------------------------------
+<Directory /var/www/html>
+    Options -Indexes
+</Directory>
+
+
+------------------------------
+9: hide Apache Version and OS Identity from Errors
+------------------------------
+# vim /etc/httpd/conf/httpd.conf
+
+ServerSignature Off
+ServerTokens Prod
+
+# service httpd restart
+
+------------------------------
+10: For More security U can Use Fail2Bann Security
+
+------------------------------
+
+
+
+----------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
